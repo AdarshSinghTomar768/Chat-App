@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat Room</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0;
+        }
+        #chat-container {
+            width: 300px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        #chat-messages {
+            height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            background-color: white;
+        }
+        #username-input, #message-input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: none;
+            border-top: 1px solid #ccc;
+        }
+        #send-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #45a049;
+        }
+        .message {
+            margin-bottom: 10px;
+        }
+        .username {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <input type="text" id="username-input" placeholder="Enter your username" />
+        <input type="text" id="message-input" placeholder="Type your message" style="display: none;" />
+        <button id="send-button">Join Chat</button>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chat-messages');
+        const usernameInput = document.getElementById('username-input');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+
+        let username = '';
+
+        function addMessage(user, message) {
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            messageElement.innerHTML = `<span class="username">${user}:</span> ${message}`;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Save to localStorage
+            const messages = JSON.parse(localStorage.getItem('chatMessages')) || [];
+            messages.push({ user, message });
+            localStorage.setItem('chatMessages', JSON.stringify(messages));
+        }
+
+        function loadMessages() {
+            const messages = JSON.parse(localStorage.getItem('chatMessages')) || [];
+            messages.forEach(msg => addMessage(msg.user, msg.message));
+        }
+
+        sendButton.addEventListener('click', () => {
+            if (!username) {
+                username = usernameInput.value.trim();
+                if (username) {
+                    usernameInput.style.display = 'none';
+                    messageInput.style.display = 'block';
+                    sendButton.textContent = 'Send';
+                    addMessage('System', `${username} has joined the chat`);
+                }
+            } else {
+                const message = messageInput.value.trim();
+                if (message) {
+                    addMessage(username, message);
+                    messageInput.value = '';
+                }
+            }
+        });
+
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendButton.click();
+            }
+        });
+
+        // Load messages when the page loads
+        loadMessages();
+
+        // Listen for storage events to update in real-time across tabs
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'chatMessages') {
+                chatMessages.innerHTML = '';
+                loadMessages();
+            }
+        });
+    </script>
+</body>
+</html>
